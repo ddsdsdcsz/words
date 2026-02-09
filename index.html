@@ -3,58 +3,85 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>我的萬級單字庫</title>
+    <title>我的雲端單字庫</title>
     <style>
-        :root { --primary: #2563eb; }
-        body { font-family: -apple-system, sans-serif; margin: 0; background: #f3f4f6; }
+        :root { --primary: #2563eb; --bg: #f3f4f6; }
+        body { font-family: -apple-system, sans-serif; margin: 0; background: var(--bg); padding-bottom: 50px; }
         .header { position: sticky; top: 0; background: white; padding: 15px; box-shadow: 0 2px 10px rgba(0,0,0,0.1); z-index: 100; }
-        .search-box { width: 100%; padding: 12px; border: 2px solid #ddd; border-radius: 8px; box-sizing: border-box; font-size: 16px; }
-        .controls { display: flex; gap: 10px; margin-top: 10px; }
-        button { flex: 1; padding: 8px; border-radius: 5px; border: none; background: var(--primary); color: white; font-size: 14px; }
-        .word-card { background: white; margin: 10px; padding: 15px; border-radius: 10px; display: flex; flex-direction: column; gap: 5px; }
-        .word-row { display: flex; justify-content: space-between; align-items: center; }
-        .word-text { font-size: 20px; font-weight: bold; color: var(--primary); }
-        .word-text.hide { filter: blur(8px); background: #eee; } /* 遮蓋效果 */
-        .pos { color: #666; font-style: italic; font-size: 14px; }
-        .meaning { color: #333; font-size: 16px; }
-        .usage { font-size: 14px; color: #666; border-left: 3px solid #ddd; padding-left: 10px; margin-top: 5px; }
-        .letter-divider { padding: 5px 15px; font-weight: bold; background: #e5e7eb; color: #4b5563; }
+        .search-box { width: 100%; padding: 12px; border: 2px solid #ddd; border-radius: 8px; box-sizing: border-box; font-size: 16px; margin-bottom: 10px; }
+        .controls { display: flex; gap: 10px; }
+        button { flex: 1; padding: 10px; border-radius: 5px; border: none; background: var(--primary); color: white; font-weight: bold; }
+        .word-card { background: white; margin: 10px; padding: 15px; border-radius: 10px; box-shadow: 0 1px 3px rgba(0,0,0,0.1); }
+        .word-row { display: flex; justify-content: space-between; align-items: center; margin-bottom: 5px; }
+        .word-text { font-size: 22px; font-weight: bold; color: var(--primary); transition: 0.2s; }
+        .word-text.hide { filter: blur(10px); background: #eee; color: transparent; }
+        .pos { color: #666; font-style: italic; font-size: 14px; background: #f0f0f0; padding: 2px 6px; border-radius: 4px; }
+        .meaning { color: #333; font-size: 17px; margin: 5px 0; }
+        .usage { font-size: 14px; color: #777; border-left: 3px solid #ddd; padding-left: 10px; margin-top: 8px; line-height: 1.4; }
+        .letter-divider { padding: 8px 15px; font-weight: bold; background: #e5e7eb; color: #4b5563; position: sticky; top: 120px; z-index: 10; }
+        .loading { text-align: center; padding: 50px; color: #666; }
     </style>
 </head>
 <body>
 
 <div class="header">
-    <input type="text" id="searchInput" class="search-box" placeholder="搜尋單字、詞性或中文...">
+    <input type="text" id="searchInput" class="search-box" placeholder="搜尋數萬個單字...">
     <div class="controls">
         <button onclick="toggleHide()">遮住/顯示英文</button>
-        <button onclick="location.reload()">重新整理</button>
+        <button onclick="location.reload()">同步雲端</button>
     </div>
 </div>
 
+<div id="loading" class="loading">正在從雲端下載單字庫...</div>
 <div id="content"></div>
 
 <script>
-    // 這裡就是你的資料庫，未來可以直接在這裡增加幾萬個單字
-    const wordData = [
-        {w: "Technical", p: "adj.", d: "專業的/技術性的", u: "Technical skills are required."},
-        {w: "ensued", p: "v.", d: "隨後發生", u: "The riot ensued after the game."},
-        {w: "maître d’hotel", p: "n.", d: "餐廳領班", u: "The maître d' showed us to our table."},
-        // 可繼續貼上幾萬筆...
-    ];
+    /** * [重要] 請在此處貼上你的 Google Sheets 「發佈到網路」的連結
+     * 格式如: https://docs.google.com/spreadsheets/d/e/2PACX-.../pubhtml
+     */
+    const G_SHEET_PUB_URL = 'https://docs.google.com/spreadsheets/d/1BweutNIdE-ncvs4OFNrHkmEfyoIAwQSbKJgVRILM7uI/edit?usp=drivesdk';
 
+    let allWords = [];
     let isHidden = false;
+
+    // 從 Google Sheets 抓取 CSV 資料
+    async function fetchData() {
+        try {
+            const csvUrl = G_SHEET_PUB_URL.replace('/pubhtml', '/pub?output=csv');
+            const response = await fetch(csvUrl);
+            const data = await response.text();
+            
+            // 解析 CSV (處理逗號與換行)
+            const rows = data.split(/\r?\n/).slice(1);
+            return rows.map(row => {
+                const cols = row.split(/,(?=(?:(?:[^"]*"){2})*[^"]*$)/);
+                return {
+                    w: cols[0]?.replace(/"/g, '').trim(),
+                    p: cols[1]?.replace(/"/g, '').trim(),
+                    d: cols[2]?.replace(/"/g, '').trim(),
+                    u: cols[3]?.replace(/"/g, '').trim()
+                };
+            }).filter(item => item.w);
+        } catch (e) {
+            alert('無法讀取雲端資料，請檢查 Google Sheets 發佈設定');
+            return [];
+        }
+    }
 
     function render(data) {
         const content = document.getElementById('content');
+        const loading = document.getElementById('loading');
+        loading.style.display = 'none';
+        
         // 按字母排序
-        data.sort((a, b) => a.w.localeCompare(b.w));
+        data.sort((a, b) => a.w.localeCompare(b.w, 'en', {sensitivity: 'base'}));
         
         let html = '';
         let lastLetter = '';
 
         data.forEach(item => {
             let currentLetter = item.w[0].toUpperCase();
-            if (currentLetter !== lastLetter) {
+            if (/[A-Z]/.test(currentLetter) && currentLetter !== lastLetter) {
                 html += `<div class="letter-divider">${currentLetter}</div>`;
                 lastLetter = currentLetter;
             }
@@ -62,14 +89,14 @@
                 <div class="word-card">
                     <div class="word-row">
                         <span class="word-text ${isHidden ? 'hide' : ''}">${item.w}</span>
-                        <span class="pos">${item.p}</span>
+                        <span class="pos">${item.p || ''}</span>
                     </div>
-                    <div class="meaning">${item.d}</div>
-                    <div class="usage">${item.u}</div>
+                    <div class="meaning">${item.d || ''}</div>
+                    ${item.u ? `<div class="usage">${item.u}</div>` : ''}
                 </div>
             `;
         });
-        content.innerHTML = html;
+        content.innerHTML = html || '<div class="loading">找不到匹配的單字</div>';
     }
 
     function toggleHide() {
@@ -79,16 +106,20 @@
 
     function filterData() {
         const query = document.getElementById('searchInput').value.toLowerCase();
-        const filtered = wordData.filter(i => 
+        const filtered = allWords.filter(i => 
             i.w.toLowerCase().includes(query) || 
-            i.d.includes(query) || 
-            i.p.includes(query)
+            (i.d && i.d.includes(query))
         );
         render(filtered);
     }
 
-    document.getElementById('searchInput').addEventListener('input', filterData);
-    render(wordData);
+    async function init() {
+        allWords = await fetchData();
+        render(allWords);
+        document.getElementById('searchInput').addEventListener('input', filterData);
+    }
+
+    init();
 </script>
 
 </body>
