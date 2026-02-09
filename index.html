@@ -2,144 +2,302 @@
 <html lang="zh-TW">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>我的高級單字庫</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="default">
+    <title>WordMaster Pro</title>
     <style>
-        :root { --primary: #2563eb; --bg: #f3f4f6; }
-        body { font-family: -apple-system, sans-serif; margin: 0; background: var(--bg); padding-bottom: 50px; }
-        .header { position: sticky; top: 0; background: white; padding: 10px; box-shadow: 0 2px 10px rgba(0,0,0,0.1); z-index: 100; }
-        .search-box { width: 100%; padding: 12px; border: 2px solid #ddd; border-radius: 8px; box-sizing: border-box; font-size: 16px; margin-bottom: 8px; }
-        .controls { display: flex; gap: 5px; margin-bottom: 8px; }
-        button { flex: 1; padding: 10px; border-radius: 5px; border: none; background: var(--primary); color: white; font-size: 14px; font-weight: bold; cursor: pointer; }
-        .index-nav { display: flex; flex-wrap: wrap; gap: 4px; justify-content: center; padding: 5px; background: #eee; border-radius: 5px; }
-        .index-nav a { text-decoration: none; color: var(--primary); font-weight: bold; padding: 4px 8px; font-size: 12px; background: white; border-radius: 3px; border: 1px solid #ddd; }
-        .word-card { background: white; margin: 10px; padding: 15px; border-radius: 10px; box-shadow: 0 1px 3px rgba(0,0,0,0.1); }
-        .word-row { display: flex; justify-content: space-between; align-items: center; }
-        /* 模糊遮蓋效果 */
-        .word-text { font-size: 22px; font-weight: bold; color: var(--primary); cursor: pointer; transition: 0.2s; padding: 2px 5px; border-radius: 4px; border: 1px solid transparent; }
-        .word-text.is-hidden { filter: blur(10px); background: #e5e7eb; color: transparent; border: 1px solid #ccc; }
-        .pos { color: #666; font-style: italic; font-size: 14px; background: #f0f0f0; padding: 2px 6px; border-radius: 4px; }
-        .meaning { color: #333; font-size: 17px; margin: 8px 0; }
-        .usage { font-size: 14px; color: #777; border-left: 3px solid #ddd; padding-left: 10px; line-height: 1.4; margin-top: 8px; }
-        .letter-divider { padding: 8px 15px; font-weight: bold; background: #cbd5e1; color: #1e293b; position: sticky; top: 180px; z-index: 10; }
-        .loading { text-align: center; padding: 50px; color: #666; font-size: 18px; }
+        :root {
+            --primary: #4361ee;
+            --bg: #f0f2f5;
+            --card: #ffffff;
+            --text: #1a1c20;
+            --sub: #64748b;
+            --radius: 16px;
+        }
+
+        body {
+            font-family: -apple-system, "SF Pro Text", sans-serif;
+            margin: 0;
+            background: var(--bg);
+            color: var(--text);
+            overflow-x: hidden;
+        }
+
+        /* 頂部固定導航 */
+        .app-bar {
+            position: sticky;
+            top: 0;
+            background: rgba(255, 255, 255, 0.85);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            padding: env(safe-area-inset-top) 15px 10px;
+            z-index: 1000;
+            border-bottom: 1px solid rgba(0,0,0,0.05);
+        }
+
+        .search-bar {
+            background: #e2e8f0;
+            border-radius: 12px;
+            padding: 10px 15px;
+            display: flex;
+            align-items: center;
+            margin-top: 10px;
+        }
+
+        .search-bar input {
+            border: none;
+            background: transparent;
+            width: 100%;
+            font-size: 16px;
+            outline: none;
+        }
+
+        .action-row {
+            display: flex;
+            gap: 8px;
+            margin-top: 10px;
+        }
+
+        .btn {
+            flex: 1;
+            border: none;
+            padding: 12px;
+            border-radius: 12px;
+            font-weight: 600;
+            font-size: 14px;
+            transition: all 0.2s;
+            cursor: pointer;
+        }
+
+        .btn-primary { background: var(--primary); color: white; }
+        .btn-sync { background: #344ead; color: white; flex: 0.4; }
+        .btn:active { transform: scale(0.96); opacity: 0.8; }
+
+        /* 右側字母快速導航索引 */
+        .side-index {
+            position: fixed;
+            right: 5px;
+            top: 50%;
+            transform: translateY(-50%);
+            display: flex;
+            flex-direction: column;
+            z-index: 2000;
+            background: rgba(255,255,255,0.7);
+            padding: 5px 2px;
+            border-radius: 20px;
+            backdrop-filter: blur(5px);
+        }
+
+        .side-index a {
+            text-decoration: none;
+            color: var(--primary);
+            font-size: 11px;
+            font-weight: 900;
+            width: 20px;
+            height: 18px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        /* 單字卡片清單 */
+        .content { padding: 15px; padding-right: 35px; }
+        .word-card {
+            background: var(--card);
+            border-radius: var(--radius);
+            padding: 20px;
+            margin-bottom: 15px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.05);
+            border: 1px solid rgba(0,0,0,0.02);
+        }
+
+        .word-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 10px;
+        }
+
+        .word-title {
+            font-size: 26px;
+            font-weight: 800;
+            color: var(--primary);
+            cursor: pointer;
+            transition: 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        /* 模糊效果加強：更有質感 */
+        .word-title.masked {
+            filter: blur(12px);
+            background: #f1f5f9;
+            color: transparent;
+            border-radius: 6px;
+        }
+
+        .pos-badge {
+            font-size: 12px;
+            font-weight: bold;
+            color: var(--sub);
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        .word-meaning {
+            font-size: 18px;
+            font-weight: 500;
+            color: #334155;
+            margin-bottom: 8px;
+        }
+
+        .word-usage {
+            font-size: 14px;
+            color: var(--sub);
+            padding-top: 10px;
+            border-top: 1px solid #f1f5f9;
+            line-height: 1.5;
+        }
+
+        .letter-divider {
+            font-size: 28px;
+            font-weight: 900;
+            color: #cbd5e1;
+            margin: 30px 0 15px 5px;
+            display: block;
+        }
+
+        .loading-screen {
+            position: fixed;
+            inset: 0;
+            background: white;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            z-index: 9999;
+        }
+
+        .spinner {
+            width: 40px;
+            height: 40px;
+            border: 4px solid #f3f3f3;
+            border-top: 4px solid var(--primary);
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+        }
+
+        @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
     </style>
 </head>
 <body>
 
-<div class="header">
-    <input type="text" id="searchInput" class="search-box" placeholder="搜尋單字、意思或詞性...">
-    <div class="controls">
-        <button onclick="setAll(true)">全部遮住</button>
-        <button onclick="setAll(false)">全部打開</button>
-        <button onclick="location.reload()" style="background:#64748b; flex:0.4;">同步</button>
-    </div>
-    <div id="indexNav" class="index-nav"></div>
+<div id="loader" class="loading-screen">
+    <div class="spinner"></div>
+    <p style="margin-top:15px; font-weight:600; color:#666;">同步萬級單字資料中...</p>
 </div>
 
-<div id="loading" class="loading">⏳ 正在載入雲端單字庫...</div>
-<div id="content"></div>
+<div class="app-bar">
+    <div style="display:flex; justify-content:space-between; align-items:center;">
+        <span style="font-size:22px; font-weight:900; color:var(--primary);">WordMaster <span style="color:#1a1c20">Pro</span></span>
+        <span id="wordCount" style="font-size:12px; color:var(--sub); font-weight:bold;">0 WORDS</span>
+    </div>
+    
+    <div class="search-bar">
+        <input type="text" id="searchInput" placeholder="搜尋英文、中文或詞性...">
+    </div>
+    
+    <div class="action-row">
+        <button class="btn btn-primary" onclick="maskAll(true)">全部遮住</button>
+        <button class="btn btn-primary" onclick="maskAll(false)">全部打開</button>
+        <button class="btn btn-sync" onclick="location.reload()">同步</button>
+    </div>
+</div>
+
+<nav class="side-index" id="sideNav"></nav>
+
+<main class="content" id="listBody"></main>
 
 <script>
-    // 已填入你的專屬 Google Sheets 連結
-    const G_SHEET_PUB_URL = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vQvabePqyogTjHeINnBYyZWK6uQpJikumzN__QbAg7Z38CurIlE8LYapPUuayBwgYH_hQuMcQ0ir0Ym/pubhtml';
+    const SHEET_PUB_URL = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vQvabePqyogTjHeINnBYyZWK6uQpJikumzN__QbAg7Z38CurIlE8LYapPUuayBwgYH_hQuMcQ0ir0Ym/pubhtml';
 
-    let allWords = [];
+    let wordDB = [];
 
-    async function fetchData() {
+    async function initApp() {
         try {
-            // 強制轉換為 CSV 格式以供讀取
-            const csvUrl = G_SHEET_PUB_URL.replace('/pubhtml', '/pub?output=csv');
-            const response = await fetch(csvUrl);
-            const data = await response.text();
+            const res = await fetch(SHEET_PUB_URL.replace('/pubhtml', '/pub?output=csv'));
+            const csv = await res.text();
+            const lines = csv.split(/\r?\n/).slice(1);
             
-            // 解析 CSV 格式
-            const rows = data.split(/\r?\n/).slice(1);
-            return rows.map(row => {
-                // 處理可能包含逗號的引號字串
-                const cols = row.split(/,(?=(?:(?:[^"]*"){2})*[^"]*$)/);
+            wordDB = lines.map(line => {
+                const parts = line.split(/,(?=(?:(?:[^"]*"){2})*[^"]*$)/);
                 return {
-                    w: cols[0]?.replace(/"/g, '').trim() || '',
-                    p: cols[1]?.replace(/"/g, '').trim() || '',
-                    d: cols[2]?.replace(/"/g, '').trim() || '',
-                    u: cols[3]?.replace(/"/g, '').trim() || ''
+                    w: parts[0]?.replace(/"/g, '').trim(),
+                    p: parts[1]?.replace(/"/g, '').trim(),
+                    d: parts[2]?.replace(/"/g, '').trim(),
+                    u: parts[3]?.replace(/"/g, '').trim()
                 };
-            }).filter(item => item.w); // 過濾掉空白列
+            }).filter(item => item.w);
+
+            document.getElementById('wordCount').innerText = `${wordDB.length} WORDS`;
+            render(wordDB);
+            document.getElementById('loader').style.display = 'none';
         } catch (e) {
-            document.getElementById('loading').innerHTML = '❌ 讀取失敗，請確認 Google 試算表已「發佈到網路」';
-            return [];
+            alert('雲端同步失敗，請檢查發佈網址');
         }
     }
 
     function render(data) {
-        const content = document.getElementById('content');
-        const nav = document.getElementById('indexNav');
-        document.getElementById('loading').style.display = 'none';
+        const list = document.getElementById('listBody');
+        const side = document.getElementById('sideNav');
         
-        // 按字母排序
-        data.sort((a, b) => a.w.localeCompare(b.w, 'en', {sensitivity: 'base'}));
+        // 字母排序
+        data.sort((a, b) => a.w.localeCompare(b.w));
         
         let html = '';
-        let navHtml = '';
-        let lastLetter = '';
+        let sideHtml = '';
+        let currentLetter = '';
 
         data.forEach(item => {
-            if (!item.w) return;
-            let currentLetter = item.w[0].toUpperCase();
-            
-            // 建立字母分區與目錄
-            if (/[A-Z]/.test(currentLetter) && currentLetter !== lastLetter) {
-                html += `<div class="letter-divider" id="letter-${currentLetter}">${currentLetter}</div>`;
-                navHtml += `<a href="#letter-${currentLetter}">${currentLetter}</a>`;
-                lastLetter = currentLetter;
+            const firstLetter = item.w[0].toUpperCase();
+            if (/[A-Z]/.test(firstLetter) && firstLetter !== currentLetter) {
+                currentLetter = firstLetter;
+                html += `<span class="letter-divider" id="idx-${currentLetter}">${currentLetter}</span>`;
+                sideHtml += `<a href="#idx-${currentLetter}">${currentLetter}</a>`;
             }
-            
+
             html += `
                 <div class="word-card">
-                    <div class="word-row">
-                        <span class="word-text" onclick="toggleOne(this)">${item.w}</span>
-                        <span class="pos">${item.p}</span>
+                    <div class="word-header">
+                        <div class="word-title" onclick="this.classList.toggle('masked')">${item.w}</div>
+                        <div class="pos-badge">${item.p || ''}</div>
                     </div>
-                    <div class="meaning">${item.d}</div>
-                    ${item.u ? `<div class="usage">${item.u}</div>` : ''}
+                    <div class="word-meaning">${item.d}</div>
+                    ${item.u ? `<div class="word-usage">${item.u}</div>` : ''}
                 </div>
             `;
         });
         
-        content.innerHTML = html || '<div class="loading">尚未在試算表中找到單字資料</div>';
-        nav.innerHTML = navHtml;
+        list.innerHTML = html;
+        side.innerHTML = sideHtml;
     }
 
-    // 個別切換模糊
-    function toggleOne(element) {
-        element.classList.toggle('is-hidden');
-    }
-
-    // 全部顯示或全部遮蓋
-    function setAll(shouldHide) {
-        document.querySelectorAll('.word-text').forEach(el => {
-            if (shouldHide) el.classList.add('is-hidden');
-            else el.classList.remove('is-hidden');
+    function maskAll(hide) {
+        document.querySelectorAll('.word-title').forEach(el => {
+            hide ? el.classList.add('masked') : el.classList.remove('masked');
         });
     }
 
-    // 搜尋功能
-    function filterData() {
-        const query = document.getElementById('searchInput').value.toLowerCase();
-        const filtered = allWords.filter(i => 
-            i.w.toLowerCase().includes(query) || 
-            (i.d && i.d.includes(query))
+    document.getElementById('searchInput').addEventListener('input', (e) => {
+        const q = e.target.value.toLowerCase();
+        const filtered = wordDB.filter(i => 
+            i.w.toLowerCase().includes(q) || 
+            (i.d && i.d.includes(q)) ||
+            (i.p && i.p.includes(q))
         );
         render(filtered);
-    }
+    });
 
-    async function init() {
-        allWords = await fetchData();
-        render(allWords);
-        document.getElementById('searchInput').addEventListener('input', filterData);
-    }
-
-    init();
+    initApp();
 </script>
 
 </body>
