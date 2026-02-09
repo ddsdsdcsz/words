@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="default">
-    <title>WordMaster Pro</title>
+    <title>WordMaster Ultra</title>
     <style>
         :root {
             --primary: #4361ee;
@@ -13,7 +13,6 @@
             --card: #ffffff;
             --text: #1a1c20;
             --sub: #64748b;
-            --radius: 16px;
         }
 
         body {
@@ -24,24 +23,38 @@
             overflow-x: hidden;
         }
 
-        /* 頂部固定導航 */
+        /* 導覽列 */
         .app-bar {
             position: sticky;
             top: 0;
-            background: rgba(255, 255, 255, 0.85);
+            background: rgba(255, 255, 255, 0.9);
             backdrop-filter: blur(20px);
             -webkit-backdrop-filter: blur(20px);
             padding: env(safe-area-inset-top) 15px 10px;
             z-index: 1000;
-            border-bottom: 1px solid rgba(0,0,0,0.05);
+            border-bottom: 1px solid rgba(0,0,0,0.1);
+        }
+
+        .top-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .menu-btn {
+            background: var(--primary);
+            color: white;
+            border: none;
+            padding: 8px 15px;
+            border-radius: 8px;
+            font-weight: bold;
+            font-size: 14px;
         }
 
         .search-bar {
             background: #e2e8f0;
             border-radius: 12px;
             padding: 10px 15px;
-            display: flex;
-            align-items: center;
             margin-top: 10px;
         }
 
@@ -53,70 +66,61 @@
             outline: none;
         }
 
-        .action-row {
-            display: flex;
-            gap: 8px;
-            margin-top: 10px;
-        }
-
-        .btn {
-            flex: 1;
-            border: none;
-            padding: 12px;
-            border-radius: 12px;
-            font-weight: 600;
-            font-size: 14px;
-            transition: all 0.2s;
-            cursor: pointer;
-        }
-
-        .btn-primary { background: var(--primary); color: white; }
-        .btn-sync { background: #344ead; color: white; flex: 0.4; }
-        .btn:active { transform: scale(0.96); opacity: 0.8; }
-
-        /* 右側字母快速導航索引 */
-        .side-index {
+        /* 全螢幕選單面板 */
+        .menu-overlay {
             position: fixed;
-            right: 5px;
-            top: 50%;
-            transform: translateY(-50%);
-            display: flex;
-            flex-direction: column;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.8);
+            backdrop-filter: blur(10px);
             z-index: 2000;
-            background: rgba(255,255,255,0.7);
-            padding: 5px 2px;
-            border-radius: 20px;
-            backdrop-filter: blur(5px);
+            display: none;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
         }
 
-        .side-index a {
-            text-decoration: none;
+        .menu-content {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 15px;
+            padding: 20px;
+        }
+
+        .menu-item {
+            width: 60px;
+            height: 60px;
+            background: white;
             color: var(--primary);
-            font-size: 11px;
-            font-weight: 900;
-            width: 20px;
-            height: 18px;
             display: flex;
             align-items: center;
             justify-content: center;
+            border-radius: 15px;
+            font-size: 20px;
+            font-weight: 900;
+            text-decoration: none;
         }
 
-        /* 單字卡片清單 */
-        .content { padding: 15px; padding-right: 35px; }
+        .close-menu {
+            margin-top: 30px;
+            color: white;
+            font-weight: bold;
+            font-size: 18px;
+            border: 2px solid white;
+            padding: 10px 30px;
+            border-radius: 30px;
+        }
+
+        /* 單字卡片 */
+        .content { padding: 15px; }
         .word-card {
             background: var(--card);
-            border-radius: var(--radius);
+            border-radius: 16px;
             padding: 20px;
             margin-bottom: 15px;
             box-shadow: 0 4px 12px rgba(0,0,0,0.05);
-            border: 1px solid rgba(0,0,0,0.02);
-        }
-
-        .word-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 10px;
         }
 
         .word-title {
@@ -124,102 +128,70 @@
             font-weight: 800;
             color: var(--primary);
             cursor: pointer;
-            transition: 0.3s cubic-bezier(0.4, 0, 0.2, 1);
         }
 
-        /* 模糊效果加強：更有質感 */
         .word-title.masked {
             filter: blur(12px);
-            background: #f1f5f9;
+            background: #eee;
             color: transparent;
-            border-radius: 6px;
-        }
-
-        .pos-badge {
-            font-size: 12px;
-            font-weight: bold;
-            color: var(--sub);
-            text-transform: uppercase;
-            letter-spacing: 1px;
-        }
-
-        .word-meaning {
-            font-size: 18px;
-            font-weight: 500;
-            color: #334155;
-            margin-bottom: 8px;
-        }
-
-        .word-usage {
-            font-size: 14px;
-            color: var(--sub);
-            padding-top: 10px;
-            border-top: 1px solid #f1f5f9;
-            line-height: 1.5;
         }
 
         .letter-divider {
-            font-size: 28px;
+            font-size: 32px;
             font-weight: 900;
             color: #cbd5e1;
-            margin: 30px 0 15px 5px;
+            margin: 40px 0 10px 5px;
             display: block;
         }
 
-        .loading-screen {
-            position: fixed;
-            inset: 0;
-            background: white;
+        .action-btns {
             display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
-            z-index: 9999;
+            gap: 10px;
+            margin-top: 10px;
         }
 
-        .spinner {
-            width: 40px;
-            height: 40px;
-            border: 4px solid #f3f3f3;
-            border-top: 4px solid var(--primary);
-            border-radius: 50%;
-            animation: spin 1s linear infinite;
+        .btn {
+            flex: 1;
+            border: none;
+            padding: 12px;
+            border-radius: 10px;
+            font-weight: bold;
+            font-size: 13px;
+            cursor: pointer;
         }
-
-        @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
     </style>
 </head>
 <body>
 
-<div id="loader" class="loading-screen">
-    <div class="spinner"></div>
-    <p style="margin-top:15px; font-weight:600; color:#666;">同步萬級單字資料中...</p>
+<div class="menu-overlay" id="menuOverlay">
+    <div style="color:white; font-size:24px; font-weight:900; margin-bottom:20px;">選擇字母跳轉</div>
+    <div class="menu-content" id="menuGrid"></div>
+    <div class="close-menu" onclick="toggleMenu(false)">關閉選單</div>
 </div>
 
 <div class="app-bar">
-    <div style="display:flex; justify-content:space-between; align-items:center;">
-        <span style="font-size:22px; font-weight:900; color:var(--primary);">WordMaster <span style="color:#1a1c20">Pro</span></span>
-        <span id="wordCount" style="font-size:12px; color:var(--sub); font-weight:bold;">0 WORDS</span>
+    <div class="top-row">
+        <button class="menu-btn" onclick="toggleMenu(true)">☰ 目錄</button>
+        <span style="font-weight:900; font-size:18px;">WordMaster Ultra</span>
+        <button class="menu-btn" onclick="location.reload()" style="background:#64748b;">同步</button>
     </div>
     
     <div class="search-bar">
-        <input type="text" id="searchInput" placeholder="搜尋英文、中文或詞性...">
+        <input type="text" id="searchInput" placeholder="搜尋萬級單字...">
     </div>
     
-    <div class="action-row">
-        <button class="btn btn-primary" onclick="maskAll(true)">全部遮住</button>
-        <button class="btn btn-primary" onclick="maskAll(false)">全部打開</button>
-        <button class="btn btn-sync" onclick="location.reload()">同步</button>
+    <div class="action-btns">
+        <button class="btn" style="background:var(--primary); color:white;" onclick="maskAll(true)">全部遮住</button>
+        <button class="btn" style="background:var(--primary); color:white;" onclick="maskAll(false)">全部打開</button>
     </div>
 </div>
 
-<nav class="side-index" id="sideNav"></nav>
-
-<main class="content" id="listBody"></main>
+<main class="content" id="listBody">
+    <div style="text-align:center; padding:50px;">載入資料中...</div>
+</main>
 
 <script>
     const SHEET_PUB_URL = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vQvabePqyogTjHeINnBYyZWK6uQpJikumzN__QbAg7Z38CurIlE8LYapPUuayBwgYH_hQuMcQ0ir0Ym/pubhtml';
-
     let wordDB = [];
 
     async function initApp() {
@@ -238,47 +210,47 @@
                 };
             }).filter(item => item.w);
 
-            document.getElementById('wordCount').innerText = `${wordDB.length} WORDS`;
             render(wordDB);
-            document.getElementById('loader').style.display = 'none';
         } catch (e) {
-            alert('雲端同步失敗，請檢查發佈網址');
+            alert('同步失敗！');
         }
     }
 
     function render(data) {
         const list = document.getElementById('listBody');
-        const side = document.getElementById('sideNav');
-        
-        // 字母排序
+        const grid = document.getElementById('menuGrid');
         data.sort((a, b) => a.w.localeCompare(b.w));
         
         let html = '';
-        let sideHtml = '';
-        let currentLetter = '';
+        let menuHtml = '';
+        let letters = [];
 
         data.forEach(item => {
-            const firstLetter = item.w[0].toUpperCase();
-            if (/[A-Z]/.test(firstLetter) && firstLetter !== currentLetter) {
-                currentLetter = firstLetter;
-                html += `<span class="letter-divider" id="idx-${currentLetter}">${currentLetter}</span>`;
-                sideHtml += `<a href="#idx-${currentLetter}">${currentLetter}</a>`;
+            const char = item.w[0].toUpperCase();
+            if (/[A-Z]/.test(char) && !letters.includes(char)) {
+                letters.push(char);
+                html += `<span class="letter-divider" id="id-${char}">${char}</span>`;
+                menuHtml += `<a href="#id-${char}" class="menu-item" onclick="toggleMenu(false)">${char}</a>`;
             }
 
             html += `
                 <div class="word-card">
-                    <div class="word-header">
+                    <div style="display:flex; justify-content:space-between; margin-bottom:8px;">
                         <div class="word-title" onclick="this.classList.toggle('masked')">${item.w}</div>
-                        <div class="pos-badge">${item.p || ''}</div>
+                        <div style="color:var(--sub); font-size:12px; font-style:italic;">${item.p || ''}</div>
                     </div>
-                    <div class="word-meaning">${item.d}</div>
-                    ${item.u ? `<div class="word-usage">${item.u}</div>` : ''}
+                    <div style="font-size:18px; font-weight:500;">${item.d}</div>
+                    ${item.u ? `<div style="font-size:14px; color:var(--sub); margin-top:10px; border-top:1px solid #f0f0f0; padding-top:10px;">${item.u}</div>` : ''}
                 </div>
             `;
         });
         
         list.innerHTML = html;
-        side.innerHTML = sideHtml;
+        grid.innerHTML = menuHtml;
+    }
+
+    function toggleMenu(show) {
+        document.getElementById('menuOverlay').style.display = show ? 'flex' : 'none';
     }
 
     function maskAll(hide) {
@@ -289,11 +261,7 @@
 
     document.getElementById('searchInput').addEventListener('input', (e) => {
         const q = e.target.value.toLowerCase();
-        const filtered = wordDB.filter(i => 
-            i.w.toLowerCase().includes(q) || 
-            (i.d && i.d.includes(q)) ||
-            (i.p && i.p.includes(q))
-        );
+        const filtered = wordDB.filter(i => i.w.toLowerCase().includes(q) || i.d.includes(q));
         render(filtered);
     });
 
