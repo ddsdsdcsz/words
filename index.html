@@ -48,8 +48,8 @@
 <div class="app-bar">
     <button class="menu-btn" onclick="openL1()">☰ 開啟三層選單目錄</button>
     <div class="btn-row">
-        <button class="toggle-btn" onclick="toggleAllWords(true)">🙈 遮住全部</button>
-        <button class="toggle-btn" onclick="toggleAllWords(false)">👁️ 顯示全部</button>
+        <button class="toggle-btn" onclick="toggleAllWords(true)">遮住全部</button>
+        <button class="toggle-btn" onclick="toggleAllWords(false)">顯示全部</button>
     </div>
     <input type="text" id="searchInput" class="search-input" placeholder="搜尋單字、中文...">
 </div>
@@ -67,17 +67,24 @@
             const csv = await res.text();
             const rows = csv.split(/\r?\n/).slice(1);
             wordDB = rows.map(r => {
-                const p = r.split(/,(?=(?:(?:[^"]*"){2})*[^"]*$)/);
+                // 更嚴格的 CSV 解析
+                const p = r.split(',');
                 return { 
-                    w: p[0]?.replace(/"/g,'').trim() || '', 
-                    p: p[1]?.replace(/"/g,'').trim() || '', 
-                    d: p[2]?.replace(/"/g,'').trim() || '', 
-                    u: p[3]?.replace(/"/g,'').trim() || '', 
-                    s: p[4]?.replace(/"/g,'').trim() || '' 
+                    w: (p[0] || '').replace(/"/g,'').trim(),
+                    p: (p[1] || '').replace(/"/g,'').trim(),
+                    d: (p[2] || '').replace(/"/g,'').trim(),
+                    u: (p[3] || '').replace(/"/g,'').trim(),
+                    s: (p[4] || '').replace(/"/g,'').trim()
                 };
-            }).filter(i => i.w);
+            }).filter(i => i.w && i.w.length > 0);
+            
+            console.log('載入單字數量:', wordDB.length);
+            console.log('範例資料:', wordDB.slice(0, 3));
             render();
-        } catch (e) { alert('同步失敗：' + e.message); }
+        } catch (e) { 
+            console.error('載入錯誤:', e);
+            alert('同步失敗：' + e.message); 
+        }
     }
 
     function render(filterData = null) {
@@ -87,15 +94,21 @@
         let addedDividers = new Set();
         
         sortedData.forEach(item => {
-            if (currentMode !== 'all' && item.s !== currentMode && !(currentMode === '0' && item.s === '')) return;
+            // 修正：更寬鬆的狀態判斷
+            const isMastered = item.s === '1';
+            const isLearning = item.s === '0' || item.s === '';
+            
+            if (currentMode === '1' && !isMastered) return;
+            if (currentMode === '0' && !isLearning) return;
+            
             const l2 = item.w.substring(0, 2).toUpperCase();
             if (!addedDividers.has(l2)) {
                 html += `<div class="divider" id="idx-${l2}">${l2}</div>`;
                 addedDividers.add(l2);
             }
             html += `
-                <div class="word-card ${item.s==='1'?'mastered':''}">
-                    <span class="star ${item.s==='1'?'active':''}">★</span>
+                <div class="word-card ${isMastered?'mastered':''}">
+                    <span class="star ${isMastered?'active':''}">★</span>
                     <div class="word-title" onclick="this.classList.toggle('masked')">${item.w}</div>
                     <div style="margin-top:8px;">${item.d}</div>
                     <div style="color:var(--sub); font-size:13px; margin-top:5px;">${item.p || ''}</div>
@@ -115,7 +128,14 @@
         document.getElementById('navStep').innerText = "第二層：選擇 A-Z";
         const letters = new Set();
         wordDB.forEach(i => {
-            if (i.w && (currentMode === 'all' || i.s === currentMode || (currentMode === '0' && i.s === ''))) {
+            if (!i.w) return;
+            
+            const isMastered = i.s === '1';
+            const isLearning = i.s === '0' || i.s === '';
+            
+            if (currentMode === 'all' || 
+                (currentMode === '1' && isMastered) || 
+                (currentMode === '0' && isLearning)) {
                 letters.add(i.w[0].toUpperCase());
             }
         });
@@ -131,7 +151,14 @@
         document.getElementById('navStep').innerText = `第三層：${l1} 開頭組合`;
         const subs = new Set();
         wordDB.forEach(i => {
-            if (i.w && i.w[0].toUpperCase() === l1 && (currentMode === 'all' || i.s === currentMode || (currentMode === '0' && i.s === ''))) {
+            if (!i.w || i.w[0].toUpperCase() !== l1) return;
+            
+            const isMastered = i.s === '1';
+            const isLearning = i.s === '0' || i.s === '';
+            
+            if (currentMode === 'all' || 
+                (currentMode === '1' && isMastered) || 
+                (currentMode === '0' && isLearning)) {
                 subs.add(i.w.substring(0, 2).toUpperCase());
             }
         });
