@@ -25,8 +25,10 @@
 
         /* 單字卡片 */
         .content { padding: 15px; }
-        .word-card { background: var(--card); border-radius: 12px; padding: 18px; margin-bottom: 12px; position: relative; border-left: 4px solid #333; }
+        .word-card { background: var(--card); border-radius: 12px; padding: 18px 18px 18px 55px; margin-bottom: 12px; position: relative; border-left: 4px solid #333; }
         .word-card.mastered { border-left-color: #03dac6; }
+        .word-number { position: absolute; left: 15px; top: 18px; color: var(--sub); font-size: 16px; font-weight: bold; }
+        .word-number.hidden { display: none; }
         .word-title { font-size: 24px; font-weight: bold; color: var(--primary); cursor: pointer; display: inline-block; }
         .word-title.masked { filter: blur(12px); background: #333; color: transparent; border-radius: 4px; user-select: none; }
         .star { position: absolute; top: 18px; right: 18px; color: #555; font-size: 20px; cursor: default; }
@@ -61,6 +63,7 @@
     <div class="stats" id="statsDisplay">載入中...</div>
     <div class="btn-row">
         <button class="toggle-btn" onclick="toggleAllWords()" id="toggleBtn">遮住</button>
+        <button class="toggle-btn" onclick="toggleNumbers()" id="numberBtn">編號</button>
         <input type="text" id="searchInput" class="search-input" placeholder="搜尋單字、中文...">
     </div>
 </div>
@@ -73,6 +76,7 @@
     let currentMode = 'all';
     let currentFilter = null;
     let isMasked = false;
+    let showNumbers = true;
 
     async function init() {
         try {
@@ -127,6 +131,7 @@
         const sortedData = [...data].sort((a, b) => a.w.localeCompare(b.w));
         let html = '';
         let addedDividers = new Set();
+        let wordCount = 0; // 單字計數器
         
         sortedData.forEach(item => {
             const isMastered = item.s === '1';
@@ -135,6 +140,8 @@
             if (currentMode === '1' && !isMastered) return;
             if (currentMode === '0' && !isLearning) return;
             
+            wordCount++; // 每個顯示的單字都增加編號
+            
             const l2 = item.w.substring(0, 2).toUpperCase();
             if (!addedDividers.has(l2)) {
                 html += `<div class="divider" id="idx-${l2}">${l2}</div>`;
@@ -142,6 +149,7 @@
             }
             html += `
                 <div class="word-card ${isMastered?'mastered':''}">
+                    <div class="word-number ${showNumbers?'':'hidden'}">${wordCount}</div>
                     <span class="star ${isMastered?'active':''}" onclick="event.stopPropagation()">★</span>
                     <div class="word-title ${isMasked?'masked':''}" onclick="this.classList.toggle('masked')">${item.w}</div>
                     <div style="margin-top:8px;">${item.d}</div>
@@ -153,10 +161,10 @@
 
     function setMode(m) {
         currentMode = m;
-        currentFilter = null; // 切換模式時清除字母篩選
+        currentFilter = null;
         document.querySelectorAll('#modeSection .grid-item').forEach(el => el.classList.remove('active-mode'));
         document.getElementById(`m-${m}`).classList.add('active-mode');
-        updateL2Menu(); // 進入第二層
+        updateL2Menu();
     }
 
     function updateL2Menu() {
@@ -266,6 +274,21 @@
             }
         });
         document.getElementById('toggleBtn').textContent = isMasked ? '顯示' : '遮住';
+    }
+
+    function toggleNumbers() {
+        showNumbers = !showNumbers;
+        const allNumbers = document.querySelectorAll('.word-number');
+        allNumbers.forEach(num => {
+            if (showNumbers) {
+                num.classList.remove('hidden');
+            } else {
+                num.classList.add('hidden');
+            }
+        });
+        document.getElementById('numberBtn').textContent = showNumbers ? '編號' : '編號';
+        // 更新按鈕樣式
+        document.getElementById('numberBtn').style.opacity = showNumbers ? '1' : '0.5';
     }
 
     document.getElementById('searchInput').addEventListener('input', (e) => {
