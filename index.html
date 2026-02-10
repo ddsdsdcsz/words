@@ -39,15 +39,15 @@
 <div class="menu-overlay" id="menuOverlay">
     <div style="color:white; margin-bottom:20px; font-weight:bold;" id="navStep">第一層：學習狀態</div>
     <div id="modeSection" class="grid" style="grid-template-columns: repeat(3, 1fr); margin-bottom:30px; width:100%;">
-        <div class="grid-item active-mode" id="m-all" onclick="setModeAndClose('all')">
+        <div class="grid-item active-mode" id="m-all" onclick="setMode('all')">
             <div>全部</div>
             <div class="grid-item-count" id="count-all">0</div>
         </div>
-        <div class="grid-item" id="m-1" onclick="setModeAndClose('1')">
+        <div class="grid-item" id="m-1" onclick="setMode('1')">
             <div>已熟</div>
             <div class="grid-item-count" id="count-1">0</div>
         </div>
-        <div class="grid-item" id="m-0" onclick="setModeAndClose('0')">
+        <div class="grid-item" id="m-0" onclick="setMode('0')">
             <div>未熟</div>
             <div class="grid-item-count" id="count-0">0</div>
         </div>
@@ -153,15 +153,10 @@
 
     function setMode(m) {
         currentMode = m;
+        currentFilter = null; // 切換模式時清除字母篩選
         document.querySelectorAll('#modeSection .grid-item').forEach(el => el.classList.remove('active-mode'));
         document.getElementById(`m-${m}`).classList.add('active-mode');
-    }
-
-    function setModeAndClose(m) {
-        setMode(m);
-        currentFilter = null; // 切換模式時清除字母篩選
-        toggleMenu(false);
-        render();
+        updateL2Menu(); // 進入第二層
     }
 
     function updateL2Menu() {
@@ -182,17 +177,27 @@
             }
         });
         
-        document.getElementById('menuGrid').innerHTML = Array.from(letters.keys()).sort().map(l => 
+        let html = `<div class="grid-item" style="background:#444" onclick="openL1()">← 返回</div>`;
+        html += `<div class="grid-item" style="background:#4a4a4a; grid-column: span 3;" onclick="showAllInMode()">顯示全部</div>`;
+        html += Array.from(letters.keys()).sort().map(l => 
             `<div class="grid-item" onclick="selectLetter('${l}')">
                 <div>${l}</div>
                 <div class="grid-item-count">${letters.get(l)}</div>
             </div>`
         ).join('');
+        document.getElementById('menuGrid').innerHTML = html;
+    }
+
+    function showAllInMode() {
+        currentFilter = null;
+        toggleMenu(false);
+        render();
+        setTimeout(() => window.scrollTo({ top: 0, behavior: 'smooth' }), 100);
     }
 
     function openL1() {
         document.getElementById('navStep').innerText = "第一層：學習狀態";
-        document.getElementById('menuGrid').innerHTML = ''; // 清空第二/三層內容
+        document.getElementById('menuGrid').innerHTML = '';
         toggleMenu(true);
     }
 
@@ -266,7 +271,6 @@
     document.getElementById('searchInput').addEventListener('input', (e) => {
         const q = e.target.value.toLowerCase();
         if (q === '') {
-            currentFilter = null;
             render();
         } else {
             const f = wordDB.filter(i => i.w.toLowerCase().includes(q) || i.d.includes(q));
