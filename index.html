@@ -60,9 +60,8 @@
     <button class="menu-btn" style="width: 100%;" onclick="openL1()">目錄</button>
     <div class="stats" id="statsDisplay">載入中...</div>
     <div class="btn-row">
-        <button class="toggle-btn" onclick="toggleAllWords(true)">遮住</button>
+        <button class="toggle-btn" onclick="toggleAllWords()" id="toggleBtn">遮住</button>
         <input type="text" id="searchInput" class="search-input" placeholder="搜尋單字、中文...">
-        <button class="toggle-btn" onclick="toggleAllWords(false)">顯示</button>
     </div>
 </div>
 
@@ -72,6 +71,8 @@
     const SHEET_CSV = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vQvabePqyogTjHeINnBYyZWK6uQpJikumzN__QbAg7Z38CurIlE8LYapPUuayBwgYH_hQuMcQ0ir0Ym/pub?output=csv';
     let wordDB = [];
     let currentMode = 'all';
+    let currentFilter = null; // 新增：用於儲存目前的篩選條件
+    let isMasked = false;
 
     async function init() {
         try {
@@ -109,7 +110,20 @@
     }
 
     function render(filterData = null) {
-        const data = filterData || wordDB;
+        let data = filterData || wordDB;
+        
+        // 套用目前的篩選條件
+        if (currentFilter) {
+            data = data.filter(i => {
+                if (currentFilter.type === 'letter') {
+                    return i.w[0].toUpperCase() === currentFilter.value;
+                } else if (currentFilter.type === 'prefix') {
+                    return i.w.substring(0, 2).toUpperCase() === currentFilter.value;
+                }
+                return true;
+            });
+        }
+        
         const sortedData = [...data].sort((a, b) => a.w.localeCompare(b.w));
         let html = '';
         let addedDividers = new Set();
@@ -129,7 +143,7 @@
             html += `
                 <div class="word-card ${isMastered?'mastered':''}">
                     <span class="star ${isMastered?'active':''}" onclick="event.stopPropagation()">★</span>
-                    <div class="word-title" onclick="this.classList.toggle('masked')">${item.w}</div>
+                    <div class="word-title ${isMasked?'masked':''}" onclick="this.classList.toggle('masked')">${item.w}</div>
                     <div style="margin-top:8px;">${item.d}</div>
                     <div style="color:var(--sub); font-size:13px; margin-top:5px;">${item.p || ''}</div>
                 </div>`;
@@ -163,7 +177,7 @@
         });
         
         document.getElementById('menuGrid').innerHTML = Array.from(letters.keys()).sort().map(l => 
-            `<div class="grid-item" onclick="openL2('${l}')">
+            `<div class="grid-item" onclick="selectLetter('${l}')">
                 <div>${l}</div>
                 <div class="grid-item-count">${letters.get(l)}</div>
             </div>`
@@ -175,12 +189,13 @@
         toggleMenu(true);
     }
 
-    function openL2(l1) {
-        document.getElementById('navStep').innerText = `第三層：${l1} 開頭組合`;
+    function selectLetter(letter) {
+        // 可以選擇直接跳轉或進入第三層
+        document.getElementById('navStep').innerText = `第三層：${letter} 開頭組合`;
         const subs = new Map();
         
         wordDB.forEach(i => {
-            if (!i.w || i.w[0].toUpperCase() !== l1) return;
+            if (!i.w || i.w[0].toUpperCase() !== letter) return;
             
             const isMastered = i.s === '1';
             const isLearning = i.s === '0' || i.s === '';
@@ -193,9 +208,11 @@
             }
         });
         
+        // 增加「顯示全部 X 開頭」選項
         let html = `<div class="grid-item" style="background:#444" onclick="openL1()">← 返回</div>`;
+        html += `<div class="grid-item" style="background:#4a4a4a; grid-column: span 3;" onclick="filterByLetter('${letter}')">顯示全部 ${letter} 開頭</div>`;
         html += Array.from(subs.keys()).sort().map(s => 
-            `<div class="grid-item" onclick="jumpToSection('${s}')">
+            `<div class="grid-item" onclick="filterByPrefix('${s}')">
                 <div>${s}</div>
                 <div class="grid-item-count">${subs.get(s)}</div>
             </div>`
@@ -203,34 +220,60 @@
         document.getElementById('menuGrid').innerHTML = html;
     }
 
-    function jumpToSection(prefix) {
+    function filterByLetter(letter) {
+        currentFilter = { type: 'letter', value: letter };
+        toggleMenu(false);
+        render();
+        setTimeout(() => {
+            const target = document.getElementById(`idx-${letter}${wordDB.find(w => w.w[0].toUpperCase() === letter)?.w[1]?.toUpperCase() || ''}`);
+            if (target) {
+                target.scrollIntoView({ behavior: 'smooth', block: 'start' });
+            } else {
+                window.scrollTo({ top: 0, behavior: 'smooth' });
+            }
+        }, 100);
+    }
+
+    function filterByPrefix(prefix) {
+        currentFilter = { type: 'prefix', value: prefix };
         toggleMenu(false);
         render();
         setTimeout(() => {
             const target = document.getElementById(`idx-${prefix}`);
             if (target) {
                 target.scrollIntoView({ behavior: 'smooth', block: 'start' });
+            } else {
+                window.scrollTo({ top: 0, behavior: 'smooth' });
             }
         }, 100);
     }
 
-    function toggleMenu(s) { document.getElementById('menuOverlay').style.display = s ? 'flex' : 'none'; }
+    function toggleMenu(s) { 
+        document.getElementById('menuOverlay').style.display = s ? 'flex' : 'none'; 
+    }
 
-    function toggleAllWords(mask) {
+    function toggleAllWords() {
+        isMasked = !isMasked;
         const allTitles = document.querySelectorAll('.word-title');
         allTitles.forEach(title => {
-            if (mask) {
+            if (isMasked) {
                 title.classList.add('masked');
             } else {
                 title.classList.remove('masked');
             }
         });
+        document.getElementById('toggleBtn').textContent = isMasked ? '顯示' : '遮住';
     }
 
     document.getElementById('searchInput').addEventListener('input', (e) => {
         const q = e.target.value.toLowerCase();
-        const f = wordDB.filter(i => i.w.toLowerCase().includes(q) || i.d.includes(q));
-        render(f);
+        if (q === '') {
+            currentFilter = null; // 清空搜尋時移除篩選
+            render();
+        } else {
+            const f = wordDB.filter(i => i.w.toLowerCase().includes(q) || i.d.includes(q));
+            render(f);
+        }
     });
 
     init();
