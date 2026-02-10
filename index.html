@@ -3,270 +3,129 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <meta name="apple-mobile-web-app-capable" content="yes">
-    <meta name="apple-mobile-web-app-status-bar-style" content="default">
-    <title>WordMaster Ultra</title>
+    <title>WordMaster Pro: Excel Sync</title>
     <style>
-        :root {
-            --primary: #4361ee;
-            --bg: #f0f2f5;
-            --card: #ffffff;
-            --text: #1a1c20;
-            --sub: #64748b;
-        }
-
-        body {
-            font-family: -apple-system, "SF Pro Text", sans-serif;
-            margin: 0;
-            background: var(--bg);
-            color: var(--text);
-            overflow-x: hidden;
-        }
-
-        /* 導覽列 */
-        .app-bar {
-            position: sticky;
-            top: 0;
-            background: rgba(255, 255, 255, 0.9);
-            backdrop-filter: blur(20px);
-            -webkit-backdrop-filter: blur(20px);
-            padding: env(safe-area-inset-top) 15px 10px;
-            z-index: 1000;
-            border-bottom: 1px solid rgba(0,0,0,0.1);
-        }
-
-        .top-row {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-        }
-
-        .menu-btn {
-            background: var(--primary);
-            color: white;
-            border: none;
-            padding: 8px 15px;
-            border-radius: 8px;
-            font-weight: bold;
-            font-size: 14px;
-        }
-
-        .search-bar {
-            background: #e2e8f0;
-            border-radius: 12px;
-            padding: 10px 15px;
-            margin-top: 10px;
-        }
-
-        .search-bar input {
-            border: none;
-            background: transparent;
-            width: 100%;
-            font-size: 16px;
-            outline: none;
-        }
-
-        /* 全螢幕選單面板 */
-        .menu-overlay {
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background: rgba(0,0,0,0.8);
-            backdrop-filter: blur(10px);
-            z-index: 2000;
-            display: none;
-            flex-direction: column;
-            justify-content: center;
-            align-items: center;
-        }
-
-        .menu-content {
-            display: grid;
-            grid-template-columns: repeat(4, 1fr);
-            gap: 15px;
-            padding: 20px;
-        }
-
-        .menu-item {
-            width: 60px;
-            height: 60px;
-            background: white;
-            color: var(--primary);
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            border-radius: 15px;
-            font-size: 20px;
-            font-weight: 900;
-            text-decoration: none;
-        }
-
-        .close-menu {
-            margin-top: 30px;
-            color: white;
-            font-weight: bold;
-            font-size: 18px;
-            border: 2px solid white;
-            padding: 10px 30px;
-            border-radius: 30px;
-        }
-
-        /* 單字卡片 */
+        :root { --primary: #4361ee; --success: #2ecc71; --star: #f1c40f; --bg: #f8f9fa; }
+        body { font-family: -apple-system, sans-serif; margin: 0; background: var(--bg); color: #1a1c20; padding-bottom: 50px; }
+        .app-bar { position: sticky; top: 0; background: rgba(255,255,255,0.9); backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px); padding: 15px; z-index: 1000; border-bottom: 1px solid rgba(0,0,0,0.1); }
+        .top-row { display: flex; justify-content: space-between; align-items: center; gap: 10px; }
+        .menu-btn { background: var(--primary); color: white; border: none; padding: 10px 15px; border-radius: 12px; font-weight: bold; cursor: pointer; flex: 1; }
+        .menu-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.9); backdrop-filter: blur(15px); z-index: 2000; display: none; flex-direction: column; align-items: center; padding: 40px 20px; overflow-y: auto; }
+        .grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; width: 100%; max-width: 400px; }
+        .grid-item { background: white; color: var(--primary); height: 50px; display: flex; align-items: center; justify-content: center; border-radius: 12px; font-size: 16px; font-weight: 800; text-decoration: none; }
+        .mode-select { display: flex; gap: 5px; width: 100%; margin-bottom: 25px; }
+        .mode-btn { flex: 1; padding: 12px; border-radius: 10px; border: 1px solid white; color: white; background: transparent; font-weight: bold; }
+        .mode-btn.active { background: white; color: var(--primary); }
         .content { padding: 15px; }
-        .word-card {
-            background: var(--card);
-            border-radius: 16px;
-            padding: 20px;
-            margin-bottom: 15px;
-            box-shadow: 0 4px 12px rgba(0,0,0,0.05);
-        }
-
-        .word-title {
-            font-size: 26px;
-            font-weight: 800;
-            color: var(--primary);
-            cursor: pointer;
-        }
-
-        .word-title.masked {
-            filter: blur(12px);
-            background: #eee;
-            color: transparent;
-        }
-
-        .letter-divider {
-            font-size: 32px;
-            font-weight: 900;
-            color: #cbd5e1;
-            margin: 40px 0 10px 5px;
-            display: block;
-        }
-
-        .action-btns {
-            display: flex;
-            gap: 10px;
-            margin-top: 10px;
-        }
-
-        .btn {
-            flex: 1;
-            border: none;
-            padding: 12px;
-            border-radius: 10px;
-            font-weight: bold;
-            font-size: 13px;
-            cursor: pointer;
-        }
+        .word-card { background: white; border-radius: 18px; padding: 18px; margin-bottom: 12px; box-shadow: 0 4px 12px rgba(0,0,0,0.05); position: relative; }
+        .word-title { font-size: 24px; font-weight: 800; color: var(--primary); cursor: pointer; }
+        .word-title.masked { filter: blur(10px); background: #eee; color: transparent; border-radius: 4px; }
+        .star-btn { position: absolute; top: 18px; right: 18px; font-size: 24px; cursor: pointer; color: #ddd; }
+        .star-btn.active { color: var(--star); }
+        .divider { font-size: 28px; font-weight: 900; color: #cbd5e1; margin: 30px 0 10px; border-bottom: 2px solid #ddd; }
+        .close-x { position: absolute; top: 20px; right: 25px; color: white; font-size: 28px; }
     </style>
 </head>
 <body>
 
 <div class="menu-overlay" id="menuOverlay">
-    <div style="color:white; font-size:24px; font-weight:900; margin-bottom:20px;">選擇字母跳轉</div>
-    <div class="menu-content" id="menuGrid"></div>
-    <div class="close-menu" onclick="toggleMenu(false)">關閉選單</div>
+    <div class="close-x" onclick="toggleMenu(false)">✕</div>
+    <div class="mode-select">
+        <button class="mode-btn active" id="btn-all" onclick="setMode('all')">全部</button>
+        <button class="mode-btn" id="btn-mastered" onclick="setMode('mastered')">已記熟 (Excel:1)</button>
+        <button class="mode-btn" id="btn-learning" onclick="setMode('learning')">未記熟 (Excel:0)</button>
+    </div>
+    <div id="menuGrid" class="grid"></div>
 </div>
 
 <div class="app-bar">
     <div class="top-row">
-        <button class="menu-btn" onclick="toggleMenu(true)">☰ 目錄</button>
-        <span style="font-weight:900; font-size:18px;">WordMaster Ultra</span>
-        <button class="menu-btn" onclick="location.reload()" style="background:#64748b;">同步</button>
-    </div>
-    
-    <div class="search-bar">
-        <input type="text" id="searchInput" placeholder="搜尋萬級單字...">
-    </div>
-    
-    <div class="action-btns">
-        <button class="btn" style="background:var(--primary); color:white;" onclick="maskAll(true)">全部遮住</button>
-        <button class="btn" style="background:var(--primary); color:white;" onclick="maskAll(false)">全部打開</button>
+        <button class="menu-btn" onclick="openL1()">☰ 目錄索引</button>
+        <button class="menu-btn" onclick="location.reload()" style="background:#6c757d; flex:0.4;">同步 Excel</button>
     </div>
 </div>
 
-<main class="content" id="listBody">
-    <div style="text-align:center; padding:50px;">載入資料中...</div>
-</main>
+<main class="content" id="listBody"></main>
 
 <script>
-    const SHEET_PUB_URL = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vQvabePqyogTjHeINnBYyZWK6uQpJikumzN__QbAg7Z38CurIlE8LYapPUuayBwgYH_hQuMcQ0ir0Ym/pubhtml';
+    const SHEET_URL = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vQvabePqyogTjHeINnBYyZWK6uQpJikumzN__QbAg7Z38CurIlE8LYapPUuayBwgYH_hQuMcQ0ir0Ym/pubhtml';
     let wordDB = [];
+    let currentViewMode = 'all';
 
-    async function initApp() {
+    async function init() {
         try {
-            const res = await fetch(SHEET_PUB_URL.replace('/pubhtml', '/pub?output=csv'));
+            const res = await fetch(SHEET_URL.replace('/pubhtml', '/pub?output=csv'));
             const csv = await res.text();
-            const lines = csv.split(/\r?\n/).slice(1);
-            
-            wordDB = lines.map(line => {
-                const parts = line.split(/,(?=(?:(?:[^"]*"){2})*[^"]*$)/);
-                return {
-                    w: parts[0]?.replace(/"/g, '').trim(),
-                    p: parts[1]?.replace(/"/g, '').trim(),
-                    d: parts[2]?.replace(/"/g, '').trim(),
-                    u: parts[3]?.replace(/"/g, '').trim()
+            const rows = csv.split(/\r?\n/).slice(1);
+            wordDB = rows.map(r => {
+                const p = r.split(/,(?=(?:(?:[^"]*"){2})*[^"]*$)/);
+                return { 
+                    w: p[0]?.replace(/"/g,'').trim(), 
+                    p: p[1]?.replace(/"/g,'').trim(), 
+                    d: p[2]?.replace(/"/g,'').trim(), 
+                    u: p[3]?.replace(/"/g,'').trim(),
+                    s: p[4]?.replace(/"/g,'').trim() // 讀取 Excel 第五欄 Status
                 };
-            }).filter(item => item.w);
-
-            render(wordDB);
-        } catch (e) {
-            alert('同步失敗！');
-        }
+            }).filter(i => i.w);
+            render();
+        } catch (e) { alert('同步失敗'); }
     }
 
-    function render(data) {
+    function render() {
         const list = document.getElementById('listBody');
-        const grid = document.getElementById('menuGrid');
-        data.sort((a, b) => a.w.localeCompare(b.w));
-        
+        wordDB.sort((a, b) => a.w.localeCompare(b.w));
         let html = '';
-        let menuHtml = '';
-        let letters = [];
+        wordDB.forEach(item => {
+            const isMastered = item.s === '1'; // 判斷 Excel 狀態
+            if (currentViewMode === 'mastered' && !isMastered) return;
+            if (currentViewMode === 'learning' && isMastered) return;
 
-        data.forEach(item => {
-            const char = item.w[0].toUpperCase();
-            if (/[A-Z]/.test(char) && !letters.includes(char)) {
-                letters.push(char);
-                html += `<span class="letter-divider" id="id-${char}">${char}</span>`;
-                menuHtml += `<a href="#id-${char}" class="menu-item" onclick="toggleMenu(false)">${char}</a>`;
-            }
+            const l2 = item.w.substring(0, 2).toUpperCase();
+            if (!html.includes(`id="idx-${l2}"`)) html += `<div class="divider" id="idx-${l2}">${l2}</div>`;
 
             html += `
                 <div class="word-card">
-                    <div style="display:flex; justify-content:space-between; margin-bottom:8px;">
-                        <div class="word-title" onclick="this.classList.toggle('masked')">${item.w}</div>
-                        <div style="color:var(--sub); font-size:12px; font-style:italic;">${item.p || ''}</div>
-                    </div>
-                    <div style="font-size:18px; font-weight:500;">${item.d}</div>
-                    ${item.u ? `<div style="font-size:14px; color:var(--sub); margin-top:10px; border-top:1px solid #f0f0f0; padding-top:10px;">${item.u}</div>` : ''}
-                </div>
-            `;
+                    <div class="star-btn ${isMastered?'active':''}">${isMastered?'★':'☆'}</div>
+                    <div class="word-title" onclick="this.classList.toggle('masked')">${item.w}</div>
+                    <div style="font-size:18px; margin-top:8px;">${item.d}</div>
+                </div>`;
         });
-        
-        list.innerHTML = html;
-        grid.innerHTML = menuHtml;
+        list.innerHTML = html || '<div style="text-align:center; padding:50px;">無符合單字</div>';
     }
 
-    function toggleMenu(show) {
-        document.getElementById('menuOverlay').style.display = show ? 'flex' : 'none';
-    }
-
-    function maskAll(hide) {
-        document.querySelectorAll('.word-title').forEach(el => {
-            hide ? el.classList.add('masked') : el.classList.remove('masked');
+    function openL1() {
+        const grid = document.getElementById('menuGrid');
+        let letters = new Set();
+        wordDB.forEach(i => {
+            const isM = (i.s === '1');
+            if (currentViewMode==='all' || (currentViewMode==='mastered'&&isM) || (currentViewMode==='learning'&&!isM)) letters.add(i.w[0].toUpperCase());
         });
+        grid.innerHTML = Array.from(letters).sort().map(l => `<div class="grid-item" onclick="openL2('${l}')">${l}</div>`).join('');
+        toggleMenu(true);
     }
 
-    document.getElementById('searchInput').addEventListener('input', (e) => {
-        const q = e.target.value.toLowerCase();
-        const filtered = wordDB.filter(i => i.w.toLowerCase().includes(q) || i.d.includes(q));
-        render(filtered);
-    });
+    function openL2(l1) {
+        const grid = document.getElementById('menuGrid');
+        let subs = new Set();
+        wordDB.forEach(i => {
+            const isM = (i.s === '1');
+            if (i.w[0].toUpperCase() === l1 && (currentViewMode==='all' || (currentViewMode==='mastered'&&isM) || (currentViewMode==='learning'&&!isM))) subs.add(i.w.substring(0, 2).toUpperCase());
+        });
+        let html = `<div class="grid-item" style="background:#eee" onclick="openL1()">← 返回</div>`;
+        html += Array.from(subs).sort().map(s => `<a href="#idx-${s}" class="grid-item" onclick="toggleMenu(false); render();">${s}</a>`).join('');
+        grid.innerHTML = html;
+    }
 
-    initApp();
+    function setMode(mode) {
+        currentViewMode = mode;
+        document.querySelectorAll('.mode-btn').forEach(b => b.classList.remove('active'));
+        document.getElementById(`btn-${mode}`).classList.add('active');
+        openL1();
+    }
+
+    function toggleMenu(s) { document.getElementById('menuOverlay').style.display = s ? 'flex' : 'none'; }
+
+    init();
 </script>
-
 </body>
 </html>
