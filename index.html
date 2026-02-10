@@ -108,10 +108,10 @@
         currentMode = m;
         document.querySelectorAll('#modeSection .grid-item').forEach(el => el.classList.remove('active-mode'));
         document.getElementById(`m-${m}`).classList.add('active-mode');
-        render();
+        updateL2Menu();
     }
 
-    function openL1() {
+    function updateL2Menu() {
         document.getElementById('navStep').innerText = "第二層：選擇 A-Z";
         const letters = new Set();
         wordDB.forEach(i => {
@@ -120,6 +120,10 @@
             }
         });
         document.getElementById('menuGrid').innerHTML = Array.from(letters).sort().map(l => `<div class="grid-item" onclick="openL2('${l}')">${l}</div>`).join('');
+    }
+
+    function openL1() {
+        updateL2Menu();
         toggleMenu(true);
     }
 
