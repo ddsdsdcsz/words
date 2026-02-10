@@ -84,10 +84,15 @@
         const data = filterData || wordDB;
         const sortedData = [...data].sort((a, b) => a.w.localeCompare(b.w));
         let html = '';
+        let addedDividers = new Set();
+        
         sortedData.forEach(item => {
             if (currentMode !== 'all' && item.s !== currentMode && !(currentMode === '0' && item.s === '')) return;
             const l2 = item.w.substring(0, 2).toUpperCase();
-            if (!html.includes(`id="idx-${l2}"`)) html += `<div class="divider" id="idx-${l2}">${l2}</div>`;
+            if (!addedDividers.has(l2)) {
+                html += `<div class="divider" id="idx-${l2}">${l2}</div>`;
+                addedDividers.add(l2);
+            }
             html += `
                 <div class="word-card ${item.s==='1'?'mastered':''}">
                     <span class="star ${item.s==='1'?'active':''}">★</span>
@@ -103,7 +108,7 @@
         currentMode = m;
         document.querySelectorAll('#modeSection .grid-item').forEach(el => el.classList.remove('active-mode'));
         document.getElementById(`m-${m}`).classList.add('active-mode');
-        openL1();
+        render();
     }
 
     function openL1() {
@@ -127,8 +132,19 @@
             }
         });
         let html = `<div class="grid-item" style="background:#444" onclick="openL1()">← 返回</div>`;
-        html += Array.from(subs).sort().map(s => `<a href="#idx-${s}" class="grid-item" onclick="toggleMenu(false); render();">${s}</a>`).join('');
+        html += Array.from(subs).sort().map(s => `<div class="grid-item" onclick="jumpToSection('${s}')">${s}</div>`).join('');
         document.getElementById('menuGrid').innerHTML = html;
+    }
+
+    function jumpToSection(prefix) {
+        toggleMenu(false);
+        render();
+        setTimeout(() => {
+            const target = document.getElementById(`idx-${prefix}`);
+            if (target) {
+                target.scrollIntoView({ behavior: 'smooth', block: 'start' });
+            }
+        }, 100);
     }
 
     function toggleMenu(s) { document.getElementById('menuOverlay').style.display = s ? 'flex' : 'none'; }
